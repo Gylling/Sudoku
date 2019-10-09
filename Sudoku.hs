@@ -32,21 +32,22 @@ type InternalState = ([[Int]],[[Int]],Int, Int)          -- ([board], [solved bo
 
 sudoku :: Game
 sudoku (Action (row,col) move) (State  (board, winBoard, mistakes, diff))
-    | (board == winBoard) = EndOfGame 1 (State (board, winBoard, mistakes, diff))
-    | (mistakes >= 3) = EndOfGame (-1) ((State (board, winBoard, mistakes, diff)))
-    | (checkInput (row, col) move) = (ContinueGame (State (board, winBoard, mistakes, diff)))
-    | (validatePos (row,col) board) = ContinueGame (State (board, winBoard, mistakes, diff))
+    | (board == winBoard)                 = EndOfGame 1 (State (board, winBoard, mistakes, diff))
+    | (mistakes > 2)                      = EndOfGame (-1) ((State (board, winBoard, mistakes, diff)))
+    | (checkInput (row, col) move)        = ContinueGame (State (board, winBoard, mistakes, diff))
+    | (validatePos (row,col) board)       = ContinueGame (State (board, winBoard, mistakes, diff))
     | (checkMove (row,col) move winBoard) = ContinueGame (State ((insertMove board move (row,col)), winBoard, mistakes, diff))
-    | otherwise = ContinueGame (State (board, winBoard, mistakes+1, diff))
+    | (mistakes == 2)                     = EndOfGame (-1) ((State (board, winBoard, mistakes, diff)))
+    | otherwise                           = ContinueGame (State (board, winBoard, mistakes+1, diff))
 
 {-
 Validation methods for the game logic.
--}    
+-}
 checkInput :: (Ord a1, Ord a2, Ord a3, Num a1, Num a2, Num a3) => (a1, a2) -> a3 -> Bool
 checkInput (row,col) move = row >8 || row <0 || col >8 || col <0 || move >9 || move <1
 
 validatePos :: (Eq a, Num a) => (Int, Int) -> [[a]] -> Bool
-validatePos (row,col) board = 0 == board !! row !! col
+validatePos (row,col) board = 0 /= board !! row !! col
 
 checkMove :: Eq a => (Int, Int) -> a -> [[a]] -> Bool
 checkMove (row,col) move board = board !! row !! col == move
@@ -74,7 +75,7 @@ game_start winOrLose =
         if level == "3"
             then return (-1)
         else game_play (ContinueGame (State (createBoard level)))
-           
+
 
 {-
 Interface logic for game.
@@ -86,21 +87,21 @@ game_play (EndOfGame val state) = (game_start val) -- Game ended (either lost or
 game_play (ContinueGame state) = --Game ongoing
    do
       let State (board, winBoard, mistakes, difficulty) = state --getting individual components of state
- --     putStrLn ("This is your current sudoku board: ")
-   --   (printBoard board)
+      putStrLn ("Mistakes: " ++ show mistakes)
+      putStrLn ("This is your current sudoku board: ")
+      putStrLn (printBoard board)
       putStrLn("Choose row:")
       x <- getLine
       putStrLn("Choose column:")
       y <- getLine
       putStrLn("Choose number:")
       no <- getLine
-      game_play (sudoku (Action ((strToInt x), (strToInt y)) (strToInt no)) (state)) 
+      game_play (sudoku (Action ((strToInt x), (strToInt y)) (strToInt no)) (state))
 
-      
+
 strToInt s = read s :: Int
 
---printBoard arr =
-  --  unlines [unwords [show (arr ! (x, y)) | x <- [0..9]] | y <- [0..9]]
+printBoard board = concat [if y==9 then "\n" else " "++ show (board !! x !! y) | x <- [0..8], y <- [0..9]]
 
 
 -- start state
