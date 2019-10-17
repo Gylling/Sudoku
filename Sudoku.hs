@@ -115,7 +115,7 @@ game_play ((ContinueGame state), code) = --Game ongoing
       no <- getLine
       if elem no exitCommands
         then do exitWith ExitSuccess
-      else if ((checkNum x) && (checkNum y) && (checkNum no))
+      else if ((checkNum x) && (checkNum y) && (checkNum no)) && (x /= "") && ((x /= "") && (y /= "") && (no /= ""))
         then game_play (sudoku (Action ((strToInt x), (strToInt y)) (strToInt no)) (state))
       else 
         game_play ((ContinueGame state), 9)
