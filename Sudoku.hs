@@ -24,21 +24,23 @@ type Player = State -> Action
 
 possibleActions = [Action (row,col) i | i <- [1..9],row <- [0..8],col <- [0..8]]
 
+mistakeTypes = ["\nWelcome to the Sudoku Game.\n", "\nMake your first move. Choose a row, a column, and a number.\n", "\nThe move was correct!\n", "\nTEST TEST TEST.\n", "\nThe chosen position is outside of the board, or you have entered a number higher than 9. Please try again.\n", "\nThe position is already taken. You must choose an empty position.\n", "\nThe move is not correct\n", "\nToo many mistakes. You lost the game.\n", "\nThe move is not correct. Try again!\n"]
+
 data Action = Action (Int, Int) Int            -- a move for a player is a pair of coordinates and an integer
          deriving (Ord,Eq)
 
 type InternalState = ([[Int]],[[Int]],Int, Int)          -- ([board], [solved board], mistakes, difficulty)
 
 
-sudoku :: Game
+sudoku :: Action -> State -> (Result, Int)
 sudoku (Action (row,col) move) (State  (board, winBoard, mistakes, diff))
-    | (board == winBoard)                 = EndOfGame 1 (State (board, winBoard, mistakes, diff))
-    | (mistakes > 2)                      = EndOfGame (-1) ((State (board, winBoard, mistakes, diff)))
-    | (checkInput (row, col) move)        = ContinueGame (State (board, winBoard, mistakes, diff))
-    | (validatePos (row,col) board)       = ContinueGame (State (board, winBoard, mistakes, diff))
-    | (checkMove (row,col) move winBoard) = ContinueGame (State ((insertMove board move (row,col)), winBoard, mistakes, diff))
-    | (mistakes == 2)                     = EndOfGame (-1) ((State (board, winBoard, mistakes, diff)))
-    | otherwise                           = ContinueGame (State (board, winBoard, mistakes+1, diff))
+    | (board == winBoard)                 = (EndOfGame 1 (State (board, winBoard, mistakes, diff)), 2)
+    | (mistakes > 2)                      = (EndOfGame (-1) ((State (board, winBoard, mistakes, diff))), 3)
+    | (checkInput (row, col) move)        = (ContinueGame (State (board, winBoard, mistakes, diff)), 4)
+    | (validatePos (row,col) board)       = (ContinueGame (State (board, winBoard, mistakes, diff)), 5)
+    | (checkMove (row,col) move winBoard) = (ContinueGame (State ((insertMove board move (row,col)), winBoard, mistakes, diff)), 6)
+    | (mistakes == 2)                     = (EndOfGame (-1) ((State (board, winBoard, mistakes, diff))), 7)
+    | otherwise                           = (ContinueGame (State (board, winBoard, mistakes+1, diff)), 8)
 
 {-
 Validation methods for the game logic.
@@ -62,19 +64,16 @@ insertMove board move (row,col) =
 {-
 Interface logic for main menu.
 -}
-game_start :: Double -> IO Integer
-game_start winOrLose =
+game_start :: Int -> IO Integer
+game_start code =
     do
-        if winOrLose == 1
-            then putStrLn("Congrats! You won the game. Let's play again.")
-        else if winOrLose == (-1)
-            then putStrLn("Sorry, too many mistakes. You lost. Try again.")
-        else putStrLn("Welcome to Sudoku.")
+        putStrLn(mistakeTypes!!code)
         putStrLn("What level do you wish to play? 0. Easy, 1. Medium, 2. Difficult.")
+        putStrLn("To exit, press 3.")
         level <- getLine --prompt for menu choice
         if level == "3"
             then return (-1)
-        else game_play (ContinueGame (State (createBoard level)))
+        else game_play ((ContinueGame (State (createBoard level))), 1)
 
 
 {-
@@ -82,11 +81,12 @@ Interface logic for game.
 Game :: The original information about the game.
 State :: Current game state.
 -}
-game_play :: Result -> IO Integer
-game_play (EndOfGame val state) = (game_start val) -- Game ended (either lost or won)
-game_play (ContinueGame state) = --Game ongoing
+game_play :: (Result, Int) -> IO Integer
+game_play ((EndOfGame val state), code) = (game_start code) -- Game ended (either lost or won)
+game_play ((ContinueGame state), code) = --Game ongoing
    do
       let State (board, winBoard, mistakes, difficulty) = state --getting individual components of state
+      putStrLn((mistakeTypes!!code))
       putStrLn ("Mistakes: " ++ show mistakes)
       putStrLn ("This is your current sudoku board: ")
       putStrLn (printBoard board)
