@@ -6,6 +6,7 @@ module Sudoku where
 import SudokuBoard
 import System.IO
 import System.Exit
+import Data.Char(isDigit)
 
 {-
 Type and data definitions.
@@ -25,7 +26,7 @@ type Player = State -> Action
 
 possibleActions = [Action (row,col) i | i <- [1..9],row <- [0..8],col <- [0..8]]
 
-userMessages = ["\nWelcome to the Sudoku Game.\n", "\nMake your first move. Choose a row, a column, and a number.\n", "\nThe move was correct!\n", "\nThe chosen position is outside of the board.\n", "\nYou have entered a number higher than 9. Please try again.\n", "\nThe position is already taken. You must choose an empty position.\n", "\nThe move is not correct\n", "\nToo many mistakes. You lost the game.\n", "\nThe move is not correct. Try again!\n"]
+userMessages = ["\nWelcome to the Sudoku Game.\n", "\nMake your first move. Choose a row, a column, and a number.\n", "\nThe move was correct!\n", "\nThe chosen position is outside of the board.\n", "\nYou have entered a number higher than 9. Please try again.\n", "\nThe position is already taken. You must choose an empty position.\n", "\nThe move is not correct\n", "\nToo many mistakes. You lost the game.\n", "\nThe move is not correct. Try again!\n", "\nYou must enter a digit.\n"]
 
 data Action = Action (Int, Int) Int            -- a move for a player is a pair of coordinates and an integer
          deriving (Ord,Eq)
@@ -65,6 +66,8 @@ insertMove board move (row,col) =
   [take col (board !! row) ++ [move] ++ drop (col + 1) (board !! row)] ++
   drop (row + 1) board
 
+checkNum :: String -> Bool
+checkNum = all isDigit
 
 {-
 Interface logic for main menu.
@@ -109,8 +112,10 @@ game_play ((ContinueGame state), code) = --Game ongoing
       no <- getLine
       if elem no ["quit", "Quit", "QUIT", "q", "Q", "exit", "EXIT", "Exit", "e", "E"]
         then do exitWith ExitSuccess
-      else
-        game_play (sudoku (Action ((strToInt x), (strToInt y)) (strToInt no)) (state))
+      else if ((checkNum x) && (checkNum y) && (checkNum no))
+        then game_play (sudoku (Action ((strToInt x), (strToInt y)) (strToInt no)) (state))
+      else 
+        game_play ((ContinueGame state), 9)
 
 
 strToInt s = read s :: Int
