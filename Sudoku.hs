@@ -36,7 +36,8 @@ sudoku :: Action -> State -> (Result, Int)
 sudoku (Action (row,col) move) (State  (board, winBoard, mistakes, diff))
     | (board == winBoard)                 = (EndOfGame 1 (State (board, winBoard, mistakes, diff)), 2)
     | (mistakes > 2)                      = (EndOfGame (-1) ((State (board, winBoard, mistakes, diff))), 3)
-    | (checkInput (row, col) move)        = (ContinueGame (State (board, winBoard, mistakes, diff)), 4)
+    | (checkInput (row, col))             = (ContinueGame (State (board, winBoard, mistakes, diff)), 4)
+    | (checkValue move)                   = (ContinueGame (State (board, winBoard, mistakes, diff)), 4)
     | (validatePos (row,col) board)       = (ContinueGame (State (board, winBoard, mistakes, diff)), 5)
     | (checkMove (row,col) move winBoard) = (ContinueGame (State ((insertMove board move (row,col)), winBoard, mistakes, diff)), 6)
     | (mistakes == 2)                     = (EndOfGame (-1) ((State (board, winBoard, mistakes, diff))), 7)
@@ -45,8 +46,11 @@ sudoku (Action (row,col) move) (State  (board, winBoard, mistakes, diff))
 {-
 Validation methods for the game logic.
 -}
-checkInput :: (Ord a1, Ord a2, Ord a3, Num a1, Num a2, Num a3) => (a1, a2) -> a3 -> Bool
-checkInput (row,col) move = row >8 || row <0 || col >8 || col <0 || move >9 || move <1
+checkInput :: (Ord a1, Ord a2, Num a1, Num a2) => (a1, a2) -> Bool
+checkInput (row,col)= row >8 || row <0 || col >8 || col <0
+
+checkValue :: (Ord a1, Num a1) => a1 -> Bool
+checkValue val = val >9 || val <1
 
 validatePos :: (Eq a, Num a) => (Int, Int) -> [[a]] -> Bool
 validatePos (row,col) board = 0 /= board !! row !! col
