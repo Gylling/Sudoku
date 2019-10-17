@@ -22,8 +22,7 @@ type Game = Action -> State -> Result
 
 type Player = State -> Action
 
------ Sudoku
-
+----- Important lists and constants
 possibleActions = [Action (row,col) i | i <- [1..9],row <- [0..8],col <- [0..8]]
 
 userMessages = ["\nWelcome to the Sudoku Game.\n", "\nMake your first move. Choose a row, a column, and a number.\n", "\nThe move was correct!\n", "\nThe chosen position is outside of the board.\n", "\nYou have entered a number higher than 9. Please try again.\n", "\nThe position is already taken. You must choose an empty position.\n", "\nThe move is not correct\n", "\nToo many mistakes. You lost the game.\n", "\nThe move is not correct. Try again!\n", "\nYou must enter a digit.\n"]
@@ -37,6 +36,9 @@ data Action = Action (Int, Int) Int            -- a move for a player is a pair 
 type InternalState = ([[Int]],[[Int]],Int, Int)          -- ([board], [solved board], mistakes, difficulty)
 
 
+{-
+Contains game logic and validation of the provided information from the user.
+-}
 sudoku :: Action -> State -> (Result, Int)
 sudoku (Action (row,col) move) (State  (board, winBoard, mistakes, diff))
     | (board == winBoard)                 = (EndOfGame (State (board, winBoard, mistakes, diff)), 2)
@@ -49,7 +51,7 @@ sudoku (Action (row,col) move) (State  (board, winBoard, mistakes, diff))
     | otherwise                           = (ContinueGame (State (board, winBoard, mistakes+1, diff)), 8)
 
 {-
-Validation methods for the game logic.
+Validation methods
 -}
 checkInput :: (Ord a1, Ord a2, Num a1, Num a2) => (a1, a2) -> Bool
 checkInput (row,col)= row >8 || row <0 || col >8 || col <0
@@ -63,17 +65,24 @@ validatePos (row,col) board = 0 /= board !! row !! col
 checkMove :: Eq a => (Int, Int) -> a -> [[a]] -> Bool
 checkMove (row,col) move board = board !! row !! col == move
 
+-- Check if input is a digit
+checkNum :: String -> Bool
+checkNum = all isDigit
+    
+{-
+Method to insert move on board.
+-}
 insertMove :: [[Int]] -> Int -> (Int, Int) -> [[Int]]
 insertMove board move (row,col) =
   take row board ++
   [take col (board !! row) ++ [move] ++ drop (col + 1) (board !! row)] ++
   drop (row + 1) board
 
--- Check if string is a digit
-checkNum :: String -> Bool
-checkNum = all isDigit
 
--- String to Int
+{-
+Parse methods.
+-}
+strToInt :: String -> Int
 strToInt s = read s :: Int
 
 {-
@@ -88,6 +97,9 @@ game_start code =
             then do exitWith ExitSuccess
         else game_play ((ContinueGame (State (createBoard level))), 1)
 
+{-
+Method for printing the main menu.
+-}
 displayMainMenu :: Int -> IO ()
 displayMainMenu code = 
     do 
@@ -97,8 +109,6 @@ displayMainMenu code =
 
 {-
 Interface logic for game.
-Game :: The original information about the game.
-State :: Current game state.
 -}
 game_play :: (Result, Int) -> IO Integer
 game_play ((EndOfGame state), code) = (game_start code) -- Game ended (either lost or won)
@@ -125,6 +135,10 @@ game_play ((ContinueGame state), code) = --Game ongoing
       else 
         game_play ((ContinueGame state), 9)
 
+
+{-
+Method for printing the current game state.
+-}
 displayCurrState :: (Show a1, Show a2) => Int -> a1 -> [[a2]] -> IO ()
 displayCurrState code mistakes board = 
     do
@@ -133,6 +147,10 @@ displayCurrState code mistakes board =
         putStrLn("\nThis is your current sudoku board: ")
         putStrLn(printBoard board)
 
+{-
+Method for printing the sudoku board.
+-}
+printBoard :: Show a => [[a]] -> [Char]
 printBoard board = concat [if y==9 then "\n" else " "++ show (board !! x !! y) | x <- [0..8], y <- [0..9]]
 
 -- start state
