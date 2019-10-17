@@ -34,7 +34,8 @@ userMessages = ["\nWelcome to the Sudoku Game.\n",
                 "\nThe move is correct. You win!\n\nNext level!\nMake your first move. Choose a row, a column, and a number.\n",
                 "\nToo many mistakes. You lost the game.\n",
                 "\nThe move is not correct. Try again!\n",
-                "\nYou must enter a positive digit.\n"]
+                "\nYou must enter a positive digit.\n",
+                "\nThe move is correct. \nYou completed all levels!\nMake your first move. Choose a row, a column, and a number.\n"]
 
 exitCommands = ["quit", "Quit", "QUIT", "q", "Q", "exit", "EXIT", "Exit", "e", "E", "3"]
 
@@ -79,8 +80,12 @@ checkNum = all isDigit
 isInputDigit :: (String, String, String) -> Bool
 isInputDigit (x,y,no) = ((checkNum x) && (checkNum y) && (checkNum no)) && (x /= "") && ((x /= "") && (y /= "") && (no /= ""))
 
+-- check if move is the winning move
+moveCorrect :: Num b => Action -> State -> (Result, b)
 moveCorrect (Action (row,col) move) (State  (board, winBoard, mistakes, diff)) =
-  if insertMove board move (row,col) == winBoard
+  if diff==2 && insertMove board move (row,col) == winBoard
+    then (EndOfGame (State (board, winBoard, mistakes, mod (diff+1) 3)), 10)
+  else if insertMove board move (row,col) == winBoard
     then (EndOfGame (State (board, winBoard, mistakes, mod (diff+1) 3)), 6)
   else
     (ContinueGame (State ((insertMove board move (row,col)), winBoard, mistakes, diff)), 2)
@@ -110,7 +115,7 @@ game_start code =
         (displayMainMenu code)
         level <- getLine --prompt for menu choice
         extGame level
-        game_play ((ContinueGame (State (createBoard (strToInt level)))), 1)
+        game_play ((ContinueGame (State (createBoard ((strToInt level)-1)))), 1)
 
 {-
 Method for printing the main menu.
@@ -119,7 +124,7 @@ displayMainMenu :: Int -> IO ()
 displayMainMenu code =
     do
         putStrLn(userMessages!!code)
-        putStrLn("What level do you wish to play? 0. Easy, 1. Medium, 2. Difficult.")
+        putStrLn("What level do you wish to play? 1. Easy, 2. Medium, 3. Difficult.")
         putStrLn("To exit write quit or exit at any point during the game.")
 
 {-
@@ -130,7 +135,7 @@ game_play ((EndOfGame (State (board, winBoard, mistakes, diff))), code) = game_p
 game_play ((ContinueGame state), code) = --Game ongoing
    do
       let State (board, winBoard, mistakes, difficulty) = state --getting individual components of state
-      (displayCurrState code mistakes board)
+      (displayCurrState code mistakes board difficulty)
       putStrLn("Choose row:")
       x <- getLine
       extGame x
@@ -151,12 +156,13 @@ game_play ((ContinueGame state), code) = --Game ongoing
 {-
 Method for printing the current game state.
 -}
-displayCurrState :: (Show a1, Show a2) => Int -> a1 -> [[a2]] -> IO ()
-displayCurrState code mistakes board =
+displayCurrState :: (Num a1, Show a1, Show a2, Show a3) => Int -> a2 -> [[a3]] -> a1 -> IO ()
+displayCurrState code mistakes board diff =
     do
         putStrLn("\n*****************************************************************")
         putStrLn(userMessages!!code)
         putStrLn("*****************************************************************")
+        putStrLn("\nLevel: " ++ show (diff+1))
         putStrLn("\nMistakes: " ++ show mistakes)
         putStrLn("\nThis is your current sudoku board: ")
         putStrLn("___________________________________________________________________\n")
@@ -172,6 +178,7 @@ printBoard board = concat [if y==9 then "\n" else " "++ show (board !! x !! y) |
 {-
 Method for exit
 -}
+extGame :: [Char] -> IO ()
 extGame inp =
   if elem inp exitCommands
     then do exitWith ExitSuccess
