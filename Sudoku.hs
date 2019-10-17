@@ -5,6 +5,7 @@ module Sudoku where
 
 import SudokuBoard
 import System.IO
+import System.Exit
 
 {-
 Type and data definitions.
@@ -24,7 +25,7 @@ type Player = State -> Action
 
 possibleActions = [Action (row,col) i | i <- [1..9],row <- [0..8],col <- [0..8]]
 
-userMessages = ["\nWelcome to the Sudoku Game.\n", "\nMake your first move. Choose a row, a column, and a number.\n", "\nThe move was correct!\n", "\nTEST TEST TEST.\n", "\nThe chosen position is outside of the board, or you have entered a number higher than 9. Please try again.\n", "\nThe position is already taken. You must choose an empty position.\n", "\nThe move is not correct\n", "\nToo many mistakes. You lost the game.\n", "\nThe move is not correct. Try again!\n"]
+userMessages = ["\nWelcome to the Sudoku Game.\n", "\nMake your first move. Choose a row, a column, and a number.\n", "\nThe move was correct!\n", "\nThe chosen position is outside of the board.\n", "\nYou have entered a number higher than 9. Please try again.\n", "\nThe position is already taken. You must choose an empty position.\n", "\nThe move is not correct\n", "\nToo many mistakes. You lost the game.\n", "\nThe move is not correct. Try again!\n"]
 
 data Action = Action (Int, Int) Int            -- a move for a player is a pair of coordinates and an integer
          deriving (Ord,Eq)
@@ -36,7 +37,7 @@ sudoku :: Action -> State -> (Result, Int)
 sudoku (Action (row,col) move) (State  (board, winBoard, mistakes, diff))
     | (board == winBoard)                 = (EndOfGame (State (board, winBoard, mistakes, diff)), 2)
     | (mistakes > 2)                      = (EndOfGame ((State (board, winBoard, mistakes, diff))), 3)
-    | (checkInput (row, col))             = (ContinueGame (State (board, winBoard, mistakes, diff)), 4)
+    | (checkInput (row, col))             = (ContinueGame (State (board, winBoard, mistakes, diff)), 3)
     | (checkValue move)                   = (ContinueGame (State (board, winBoard, mistakes, diff)), 4)
     | (validatePos (row,col) board)       = (ContinueGame (State (board, winBoard, mistakes, diff)), 5)
     | (checkMove (row,col) move winBoard) = (ContinueGame (State ((insertMove board move (row,col)), winBoard, mistakes, diff)), 6)
@@ -96,17 +97,25 @@ game_play ((ContinueGame state), code) = --Game ongoing
       putStrLn (printBoard board)
       putStrLn("Choose row:")
       x <- getLine
-      putStrLn("Choose column:")
+      if elem x ["quit", "Quit", "QUIT", "q", "Q", "exit", "EXIT", "Exit", "e", "E"]
+        then do exitWith ExitSuccess
+      else
+        putStrLn("Choose column:")
       y <- getLine
-      putStrLn("Choose number:")
+      if elem y ["quit", "Quit", "QUIT", "q", "Q", "exit", "EXIT", "Exit", "e", "E"]
+        then do exitWith ExitSuccess
+      else
+        putStrLn("Choose number:")
       no <- getLine
-      game_play (sudoku (Action ((strToInt x), (strToInt y)) (strToInt no)) (state))
+      if elem no ["quit", "Quit", "QUIT", "q", "Q", "exit", "EXIT", "Exit", "e", "E"]
+        then do exitWith ExitSuccess
+      else
+        game_play (sudoku (Action ((strToInt x), (strToInt y)) (strToInt no)) (state))
 
 
 strToInt s = read s :: Int
 
 printBoard board = concat [if y==9 then "\n" else " "++ show (board !! x !! y) | x <- [0..8], y <- [0..9]]
-
 
 -- start state
 --sudoku_start :: Int -> State
