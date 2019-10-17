@@ -1,6 +1,6 @@
 -- CPSC 312 Project 1
--- Deina Kellezi
--- Erik Gylling - 36895605
+-- Deina Kellezi  - 65323842
+-- Erik Gylling   - 36895605
 
 module Sudoku where
 
