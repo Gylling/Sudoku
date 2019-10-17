@@ -109,10 +109,10 @@ strToInt s = read s :: Int
 {-
 Interface logic for main menu.
 -}
-game_start :: Int -> IO Integer
-game_start code =
+
+game_start =
     do
-        (displayMainMenu code)
+        (displayMainMenu 0)
         level <- getLine --prompt for menu choice
         extGame level
         game_play ((ContinueGame (State (createBoard ((strToInt level)-1)))), 1)
