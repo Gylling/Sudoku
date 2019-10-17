@@ -109,7 +109,7 @@ strToInt s = read s :: Int
 {-
 Interface logic for main menu.
 -}
-
+game_start :: IO Integer
 game_start =
     do
         (displayMainMenu 0)
