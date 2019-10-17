@@ -12,7 +12,7 @@ Type and data definitions.
 data State = State InternalState  -- internal_state
          deriving (Ord, Eq, Show)
 
-data Result = EndOfGame Double State    -- end of game: value, starting state
+data Result = EndOfGame State           -- end of game: starting state
             | ContinueGame State        -- continue with new state
          deriving (Eq, Show)
 
@@ -24,7 +24,7 @@ type Player = State -> Action
 
 possibleActions = [Action (row,col) i | i <- [1..9],row <- [0..8],col <- [0..8]]
 
-mistakeTypes = ["\nWelcome to the Sudoku Game.\n", "\nMake your first move. Choose a row, a column, and a number.\n", "\nThe move was correct!\n", "\nTEST TEST TEST.\n", "\nThe chosen position is outside of the board, or you have entered a number higher than 9. Please try again.\n", "\nThe position is already taken. You must choose an empty position.\n", "\nThe move is not correct\n", "\nToo many mistakes. You lost the game.\n", "\nThe move is not correct. Try again!\n"]
+userMessages = ["\nWelcome to the Sudoku Game.\n", "\nMake your first move. Choose a row, a column, and a number.\n", "\nThe move was correct!\n", "\nTEST TEST TEST.\n", "\nThe chosen position is outside of the board, or you have entered a number higher than 9. Please try again.\n", "\nThe position is already taken. You must choose an empty position.\n", "\nThe move is not correct\n", "\nToo many mistakes. You lost the game.\n", "\nThe move is not correct. Try again!\n"]
 
 data Action = Action (Int, Int) Int            -- a move for a player is a pair of coordinates and an integer
          deriving (Ord,Eq)
@@ -34,13 +34,13 @@ type InternalState = ([[Int]],[[Int]],Int, Int)          -- ([board], [solved bo
 
 sudoku :: Action -> State -> (Result, Int)
 sudoku (Action (row,col) move) (State  (board, winBoard, mistakes, diff))
-    | (board == winBoard)                 = (EndOfGame 1 (State (board, winBoard, mistakes, diff)), 2)
-    | (mistakes > 2)                      = (EndOfGame (-1) ((State (board, winBoard, mistakes, diff))), 3)
+    | (board == winBoard)                 = (EndOfGame (State (board, winBoard, mistakes, diff)), 2)
+    | (mistakes > 2)                      = (EndOfGame ((State (board, winBoard, mistakes, diff))), 3)
     | (checkInput (row, col))             = (ContinueGame (State (board, winBoard, mistakes, diff)), 4)
     | (checkValue move)                   = (ContinueGame (State (board, winBoard, mistakes, diff)), 4)
     | (validatePos (row,col) board)       = (ContinueGame (State (board, winBoard, mistakes, diff)), 5)
     | (checkMove (row,col) move winBoard) = (ContinueGame (State ((insertMove board move (row,col)), winBoard, mistakes, diff)), 6)
-    | (mistakes == 2)                     = (EndOfGame (-1) ((State (board, winBoard, mistakes, diff))), 7)
+    | (mistakes == 2)                     = (EndOfGame ((State (board, winBoard, mistakes, diff))), 7)
     | otherwise                           = (ContinueGame (State (board, winBoard, mistakes+1, diff)), 8)
 
 {-
@@ -71,7 +71,7 @@ Interface logic for main menu.
 game_start :: Int -> IO Integer
 game_start code =
     do
-        putStrLn(mistakeTypes!!code)
+        putStrLn(userMessages!!code)
         putStrLn("What level do you wish to play? 0. Easy, 1. Medium, 2. Difficult.")
         putStrLn("To exit, press 3.")
         level <- getLine --prompt for menu choice
@@ -86,11 +86,11 @@ Game :: The original information about the game.
 State :: Current game state.
 -}
 game_play :: (Result, Int) -> IO Integer
-game_play ((EndOfGame val state), code) = (game_start code) -- Game ended (either lost or won)
+game_play ((EndOfGame state), code) = (game_start code) -- Game ended (either lost or won)
 game_play ((ContinueGame state), code) = --Game ongoing
    do
       let State (board, winBoard, mistakes, difficulty) = state --getting individual components of state
-      putStrLn((mistakeTypes!!code))
+      putStrLn((userMessages!!code))
       putStrLn ("Mistakes: " ++ show mistakes)
       putStrLn ("This is your current sudoku board: ")
       putStrLn (printBoard board)
