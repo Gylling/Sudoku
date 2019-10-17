@@ -68,6 +68,9 @@ checkMove (row,col) move board = board !! row !! col == move
 -- Check if input is a digit
 checkNum :: String -> Bool
 checkNum = all isDigit
+
+isInputDigit :: (String, String, String) -> Bool
+isInputDigit (x,y,no) = ((checkNum x) && (checkNum y) && (checkNum no)) && (x /= "") && ((x /= "") && (y /= "") && (no /= ""))
     
 {-
 Method to insert move on board.
@@ -130,11 +133,10 @@ game_play ((ContinueGame state), code) = --Game ongoing
       no <- getLine
       if elem no exitCommands
         then do exitWith ExitSuccess
-      else if ((checkNum x) && (checkNum y) && (checkNum no)) && (x /= "") && ((x /= "") && (y /= "") && (no /= ""))
+      else if (isInputDigit (x,y,no))
         then game_play (sudoku (Action ((strToInt x), (strToInt y)) (strToInt no)) (state))
       else 
         game_play ((ContinueGame state), 9)
-
 
 {-
 Method for printing the current game state.
