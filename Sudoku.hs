@@ -28,6 +28,9 @@ possibleActions = [Action (row,col) i | i <- [1..9],row <- [0..8],col <- [0..8]]
 
 userMessages = ["\nWelcome to the Sudoku Game.\n", "\nMake your first move. Choose a row, a column, and a number.\n", "\nThe move was correct!\n", "\nThe chosen position is outside of the board.\n", "\nYou have entered a number higher than 9. Please try again.\n", "\nThe position is already taken. You must choose an empty position.\n", "\nThe move is not correct\n", "\nToo many mistakes. You lost the game.\n", "\nThe move is not correct. Try again!\n", "\nYou must enter a digit.\n"]
 
+exitCommands = ["quit", "Quit", "QUIT", "q", "Q", "exit", "EXIT", "Exit", "e", "E"]
+
+
 data Action = Action (Int, Int) Int            -- a move for a player is a pair of coordinates and an integer
          deriving (Ord,Eq)
 
@@ -100,17 +103,17 @@ game_play ((ContinueGame state), code) = --Game ongoing
       putStrLn (printBoard board)
       putStrLn("Choose row:")
       x <- getLine
-      if elem x ["quit", "Quit", "QUIT", "q", "Q", "exit", "EXIT", "Exit", "e", "E"]
+      if elem x exitCommands
         then do exitWith ExitSuccess
       else
         putStrLn("Choose column:")
       y <- getLine
-      if elem y ["quit", "Quit", "QUIT", "q", "Q", "exit", "EXIT", "Exit", "e", "E"]
+      if elem y exitCommands
         then do exitWith ExitSuccess
       else
         putStrLn("Choose number:")
       no <- getLine
-      if elem no ["quit", "Quit", "QUIT", "q", "Q", "exit", "EXIT", "Exit", "e", "E"]
+      if elem no exitCommands
         then do exitWith ExitSuccess
       else if ((checkNum x) && (checkNum y) && (checkNum no))
         then game_play (sudoku (Action ((strToInt x), (strToInt y)) (strToInt no)) (state))
