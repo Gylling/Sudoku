@@ -78,7 +78,7 @@ checkNum = all isDigit
 
 isInputDigit :: (String, String, String) -> Bool
 isInputDigit (x,y,no) = ((checkNum x) && (checkNum y) && (checkNum no)) && (x /= "") && ((x /= "") && (y /= "") && (no /= ""))
-    
+
 moveCorrect (Action (row,col) move) (State  (board, winBoard, mistakes, diff)) =
   if insertMove board move (row,col) == winBoard
     then (EndOfGame (State (board, winBoard, mistakes, mod (diff+1) 3)), 6)
@@ -106,22 +106,21 @@ Interface logic for main menu.
 -}
 game_start :: Int -> IO Integer
 game_start code =
-    do 
+    do
         (displayMainMenu code)
         level <- getLine --prompt for menu choice
-        if level == "3"
-            then do exitWith ExitSuccess
-        else game_play ((ContinueGame (State (createBoard (strToInt level)))), 1)
+        extGame level
+        game_play ((ContinueGame (State (createBoard (strToInt level)))), 1)
 
 {-
 Method for printing the main menu.
 -}
 displayMainMenu :: Int -> IO ()
-displayMainMenu code = 
-    do 
+displayMainMenu code =
+    do
         putStrLn(userMessages!!code)
         putStrLn("What level do you wish to play? 0. Easy, 1. Medium, 2. Difficult.")
-        putStrLn("To exit, write 3, quit, exit at any point during the game.")
+        putStrLn("To exit write quit or exit at any point during the game.")
 
 {-
 Interface logic for game.
@@ -134,19 +133,17 @@ game_play ((ContinueGame state), code) = --Game ongoing
       (displayCurrState code mistakes board)
       putStrLn("Choose row:")
       x <- getLine
-      if elem x exitCommands
-        then do exitWith ExitSuccess
-      else
-        putStrLn("Choose column:")
+      extGame x
+      putStrLn("Choose column:")
+
       y <- getLine
-      if elem y exitCommands
-        then do exitWith ExitSuccess
-      else
-        putStrLn("Choose number:")
+      extGame y
+      putStrLn("Choose number:")
+
       no <- getLine
-      if elem no exitCommands
-        then do exitWith ExitSuccess
-      else if (isInputDigit (x,y,no))
+      extGame no
+
+      if (isInputDigit (x,y,no))
         then game_play (sudoku (Action ((strToInt x), (strToInt y)) (strToInt no)) (state))
       else
         game_play ((ContinueGame state), 9)
@@ -155,7 +152,7 @@ game_play ((ContinueGame state), code) = --Game ongoing
 Method for printing the current game state.
 -}
 displayCurrState :: (Show a1, Show a2) => Int -> a1 -> [[a2]] -> IO ()
-displayCurrState code mistakes board = 
+displayCurrState code mistakes board =
     do
         putStrLn("\n*****************************************************************")
         putStrLn(userMessages!!code)
@@ -172,11 +169,14 @@ Method for printing the sudoku board.
 printBoard :: Show a => [[a]] -> [Char]
 printBoard board = concat [if y==9 then "\n" else " "++ show (board !! x !! y) | x <- [0..8], y <- [0..9]]
 
--- start state
---sudoku_start :: Int -> State
---sudoku_start diff = State (createBoard diff)
+{-
+Method for exit
+-}
+extGame inp =
+  if elem inp exitCommands
+    then do exitWith ExitSuccess
+  else
+    putStr("")
 
 instance Show Action where
     show (Action (row,col) x) = show x ++ " inserted at " ++ show (row,col)
-
-    --            then computer_play game (ContinueGame start_state) opponent (State (createBoard diff))
