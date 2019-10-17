@@ -25,7 +25,16 @@ type Player = State -> Action
 ----- Important lists and constants
 possibleActions = [Action (row,col) i | i <- [1..9],row <- [0..8],col <- [0..8]]
 
-userMessages = ["\nWelcome to the Sudoku Game.\n", "\nMake your first move. Choose a row, a column, and a number.\n", "\nThe move was correct!\n", "\nThe chosen position is outside of the board.\n", "\nYou have entered a number higher than 9. Please try again.\n", "\nThe position is already taken. You must choose an empty position.\n", "\nThe move is not correct\n", "\nToo many mistakes. You lost the game.\n", "\nThe move is not correct. Try again!\n", "\nYou must enter a digit.\n"]
+userMessages = ["\nWelcome to the Sudoku Game.\n",
+                "\nMake your first move. Choose a row, a column, and a number.\n",
+                "\nThe move was correct!\n",
+                "\nThe chosen position is outside of the board.\n",
+                "\nYou have entered a number higher than 9 or lower than 1. Please try again.\n",
+                "\nThe position is already taken. You must choose an empty position.\n",
+                "\nThe move is correct. You win!\n\nNext level!\nMake your first move. Choose a row, a column, and a number.\n",
+                "\nToo many mistakes. You lost the game.\n",
+                "\nThe move is not correct. Try again!\n",
+                "\nYou must enter a positive digit.\n"]
 
 exitCommands = ["quit", "Quit", "QUIT", "q", "Q", "exit", "EXIT", "Exit", "e", "E", "3"]
 
@@ -41,12 +50,10 @@ Contains game logic and validation of the provided information from the user.
 -}
 sudoku :: Action -> State -> (Result, Int)
 sudoku (Action (row,col) move) (State  (board, winBoard, mistakes, diff))
-    | (board == winBoard)                 = (EndOfGame (State (board, winBoard, mistakes, diff)), 2)
-    | (mistakes > 2)                      = (EndOfGame ((State (board, winBoard, mistakes, diff))), 3)
     | (checkInput (row, col))             = (ContinueGame (State (board, winBoard, mistakes, diff)), 3)
     | (checkValue move)                   = (ContinueGame (State (board, winBoard, mistakes, diff)), 4)
     | (validatePos (row,col) board)       = (ContinueGame (State (board, winBoard, mistakes, diff)), 5)
-    | (checkMove (row,col) move winBoard) = (ContinueGame (State ((insertMove board move (row,col)), winBoard, mistakes, diff)), 6)
+    | (checkMove (row,col) move winBoard) = moveCorrect (Action (row,col) move) (State (board, winBoard, mistakes, diff))
     | (mistakes == 2)                     = (EndOfGame ((State (board, winBoard, mistakes, diff))), 7)
     | otherwise                           = (ContinueGame (State (board, winBoard, mistakes+1, diff)), 8)
 
@@ -72,6 +79,12 @@ checkNum = all isDigit
 isInputDigit :: (String, String, String) -> Bool
 isInputDigit (x,y,no) = ((checkNum x) && (checkNum y) && (checkNum no)) && (x /= "") && ((x /= "") && (y /= "") && (no /= ""))
     
+moveCorrect (Action (row,col) move) (State  (board, winBoard, mistakes, diff)) =
+  if insertMove board move (row,col) == winBoard
+    then (EndOfGame (State (board, winBoard, mistakes, mod (diff+1) 3)), 6)
+  else
+    (ContinueGame (State ((insertMove board move (row,col)), winBoard, mistakes, diff)), 2)
+
 {-
 Method to insert move on board.
 -}
@@ -98,7 +111,7 @@ game_start code =
         level <- getLine --prompt for menu choice
         if level == "3"
             then do exitWith ExitSuccess
-        else game_play ((ContinueGame (State (createBoard level))), 1)
+        else game_play ((ContinueGame (State (createBoard (strToInt level)))), 1)
 
 {-
 Method for printing the main menu.
@@ -114,7 +127,7 @@ displayMainMenu code =
 Interface logic for game.
 -}
 game_play :: (Result, Int) -> IO Integer
-game_play ((EndOfGame state), code) = (game_start code) -- Game ended (either lost or won)
+game_play ((EndOfGame (State (board, winBoard, mistakes, diff))), code) = game_play ((ContinueGame (State (createBoard diff))), code) -- Game ended (either lost or won)
 game_play ((ContinueGame state), code) = --Game ongoing
    do
       let State (board, winBoard, mistakes, difficulty) = state --getting individual components of state
@@ -135,7 +148,7 @@ game_play ((ContinueGame state), code) = --Game ongoing
         then do exitWith ExitSuccess
       else if (isInputDigit (x,y,no))
         then game_play (sudoku (Action ((strToInt x), (strToInt y)) (strToInt no)) (state))
-      else 
+      else
         game_play ((ContinueGame state), 9)
 
 {-
