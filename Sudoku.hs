@@ -1,5 +1,6 @@
 -- CPSC 312 Project 1
--- Deina Kellezi & Erik Gylling
+-- Deina Kellezi
+-- Erik Gylling - 36895605
 
 module Sudoku where
 
@@ -7,6 +8,12 @@ import SudokuBoard
 import System.IO
 import System.Exit
 import Data.Char(isDigit)
+
+
+-- To run it, try:
+-- ghci
+-- :l sudoku
+-- game_start
 
 {-
 Type and data definitions.
@@ -23,8 +30,6 @@ type Game = Action -> State -> Result
 type Player = State -> Action
 
 ----- Important lists and constants
-possibleActions = [Action (row,col) i | i <- [1..9],row <- [0..8],col <- [0..8]]
-
 userMessages = ["\nWelcome to the Sudoku Game.\n",
                 "\nMake your first move. Choose a row, a column, and a number.\n",
                 "\nThe move was correct!\n",
@@ -42,6 +47,10 @@ exitCommands = ["quit", "Quit", "QUIT", "q", "Q", "exit", "EXIT", "Exit", "e", "
 
 data Action = Action (Int, Int) Int            -- a move for a player is a pair of coordinates and an integer
          deriving (Ord,Eq)
+
+instance Show Action where
+     show (Action (row,col) x) = show x ++ " inserted at " ++ show (row,col)
+
 
 type InternalState = ([[Int]],[[Int]],Int, Int)          -- ([board], [solved board], mistakes, difficulty)
 
@@ -124,7 +133,7 @@ displayMainMenu :: Int -> IO ()
 displayMainMenu code =
     do
         putStrLn(userMessages!!code)
-        putStrLn("What level do you wish to play? 1. Easy, 2. Medium, 3. Difficult.")
+        putStrLn("What level do you wish to play?\n1. Easy, 2. Medium, 3. Difficult.\n")
         putStrLn("To exit write quit or exit at any point during the game.")
 
 {-
@@ -184,6 +193,3 @@ extGame inp =
     then do exitWith ExitSuccess
   else
     putStr("")
-
-instance Show Action where
-    show (Action (row,col) x) = show x ++ " inserted at " ++ show (row,col)
