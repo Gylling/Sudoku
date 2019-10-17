@@ -69,23 +69,31 @@ insertMove board move (row,col) =
   [take col (board !! row) ++ [move] ++ drop (col + 1) (board !! row)] ++
   drop (row + 1) board
 
+-- Check if string is a digit
 checkNum :: String -> Bool
 checkNum = all isDigit
+
+-- String to Int
+strToInt s = read s :: Int
 
 {-
 Interface logic for main menu.
 -}
 game_start :: Int -> IO Integer
 game_start code =
-    do
-        putStrLn(userMessages!!code)
-        putStrLn("What level do you wish to play? 0. Easy, 1. Medium, 2. Difficult.")
-        putStrLn("To exit, write 3, quit, exit at any point during the game.")
+    do 
+        (displayMainMenu code)
         level <- getLine --prompt for menu choice
         if level == "3"
             then do exitWith ExitSuccess
         else game_play ((ContinueGame (State (createBoard level))), 1)
 
+displayMainMenu :: Int -> IO ()
+displayMainMenu code = 
+    do 
+        putStrLn(userMessages!!code)
+        putStrLn("What level do you wish to play? 0. Easy, 1. Medium, 2. Difficult.")
+        putStrLn("To exit, write 3, quit, exit at any point during the game.")
 
 {-
 Interface logic for game.
@@ -97,10 +105,7 @@ game_play ((EndOfGame state), code) = (game_start code) -- Game ended (either lo
 game_play ((ContinueGame state), code) = --Game ongoing
    do
       let State (board, winBoard, mistakes, difficulty) = state --getting individual components of state
-      putStrLn((userMessages!!code))
-      putStrLn ("Mistakes: " ++ show mistakes)
-      putStrLn ("This is your current sudoku board: ")
-      putStrLn (printBoard board)
+      (displayCurrState code mistakes board)
       putStrLn("Choose row:")
       x <- getLine
       if elem x exitCommands
@@ -120,8 +125,13 @@ game_play ((ContinueGame state), code) = --Game ongoing
       else 
         game_play ((ContinueGame state), 9)
 
-
-strToInt s = read s :: Int
+displayCurrState :: (Show a1, Show a2) => Int -> a1 -> [[a2]] -> IO ()
+displayCurrState code mistakes board = 
+    do
+        putStrLn(userMessages!!code)
+        putStrLn("\nMistakes: " ++ show mistakes)
+        putStrLn("\nThis is your current sudoku board: ")
+        putStrLn(printBoard board)
 
 printBoard board = concat [if y==9 then "\n" else " "++ show (board !! x !! y) | x <- [0..8], y <- [0..9]]
 
