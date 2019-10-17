@@ -28,7 +28,7 @@ possibleActions = [Action (row,col) i | i <- [1..9],row <- [0..8],col <- [0..8]]
 
 userMessages = ["\nWelcome to the Sudoku Game.\n", "\nMake your first move. Choose a row, a column, and a number.\n", "\nThe move was correct!\n", "\nThe chosen position is outside of the board.\n", "\nYou have entered a number higher than 9. Please try again.\n", "\nThe position is already taken. You must choose an empty position.\n", "\nThe move is not correct\n", "\nToo many mistakes. You lost the game.\n", "\nThe move is not correct. Try again!\n", "\nYou must enter a digit.\n"]
 
-exitCommands = ["quit", "Quit", "QUIT", "q", "Q", "exit", "EXIT", "Exit", "e", "E"]
+exitCommands = ["quit", "Quit", "QUIT", "q", "Q", "exit", "EXIT", "Exit", "e", "E", "3"]
 
 
 data Action = Action (Int, Int) Int            -- a move for a player is a pair of coordinates and an integer
@@ -80,10 +80,10 @@ game_start code =
     do
         putStrLn(userMessages!!code)
         putStrLn("What level do you wish to play? 0. Easy, 1. Medium, 2. Difficult.")
-        putStrLn("To exit, press 3.")
+        putStrLn("To exit, write 3, quit, exit at any point during the game.")
         level <- getLine --prompt for menu choice
         if level == "3"
-            then return (-1)
+            then do exitWith ExitSuccess
         else game_play ((ContinueGame (State (createBoard level))), 1)
 
 
