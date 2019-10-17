@@ -142,10 +142,14 @@ Method for printing the current game state.
 displayCurrState :: (Show a1, Show a2) => Int -> a1 -> [[a2]] -> IO ()
 displayCurrState code mistakes board = 
     do
+        putStrLn("\n*****************************************************************")
         putStrLn(userMessages!!code)
+        putStrLn("*****************************************************************")
         putStrLn("\nMistakes: " ++ show mistakes)
         putStrLn("\nThis is your current sudoku board: ")
+        putStrLn("___________________________________________________________________\n")
         putStrLn(printBoard board)
+        putStrLn("___________________________________________________________________\n")
 
 {-
 Method for printing the sudoku board.
