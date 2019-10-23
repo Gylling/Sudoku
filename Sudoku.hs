@@ -42,7 +42,7 @@ userMessages = ["\nWelcome to the Sudoku Game.\n",
                 "\nYou must enter a positive digit.\n",
                 "\nThe move is correct. \nYou completed all levels!\nMake your first move. Choose a row, a column, and a number.\n"]
 
-exitCommands = ["quit", "Quit", "QUIT", "q", "Q", "exit", "EXIT", "Exit", "e", "E", "3"]
+exitCommands = ["quit", "Quit", "QUIT", "q", "Q", "exit", "EXIT", "Exit", "e", "E"]
 
 
 data Action = Action (Int, Int) Int            -- a move for a player is a pair of coordinates and an integer
