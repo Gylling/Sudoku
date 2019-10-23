@@ -124,7 +124,10 @@ game_start =
         (displayMainMenu 0)
         level <- getLine --prompt for menu choice
         extGame level
-        game_play ((ContinueGame (State (createBoard ((strToInt level)-1)))), 1)
+        if (isInputDigit (level,"1","1"))
+          then game_play ((ContinueGame (State (createBoard ((strToInt level)-1)))), 1)
+        else
+           game_start
 
 {-
 Method for printing the main menu.
